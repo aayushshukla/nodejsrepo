@@ -23,7 +23,7 @@ const empSchema = new mongoose.Schema({
       car_model:
         { 
           type:String,
-          required:[true,"Car model details are missing"],
+          required:[false,"Car model details are missing"],
 
         }
 

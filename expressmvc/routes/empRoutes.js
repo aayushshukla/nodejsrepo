@@ -5,5 +5,12 @@ const router =express.Router()
 
 router.route("/")
      .get(employeeController.getAllEmployeeDetails)
+
+router.route("/signup")
+.get(employeeController.showSignUp)
+.post(employeeController.addNewUser)
+
+router.route("/delete")
+  .get(employeeController.removeUser)
 module.exports = router;
         

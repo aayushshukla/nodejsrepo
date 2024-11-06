@@ -1,4 +1,7 @@
+const ApiError = require("../utils/ApiError")
 const empModel = require("./../models/employeeModel")
+const exceptionHandler = require("./../utils/ApiError")
+const logger = require("./../utils/logger")
 
 exports.addNewEmployee=async(req,res)=>{
  try{
@@ -28,7 +31,8 @@ exports.addNewEmployee=async(req,res)=>{
 exports.getAllEmployees= async(req,res)=>{
    try{
     const employees =  await empModel.find()
-
+    //console.log(logger)
+  logger.log("info","Successfully fetched all employee details")
     res.status(200).json({
         status:"Success",
         results : employees.length,
@@ -36,22 +40,29 @@ exports.getAllEmployees= async(req,res)=>{
            employeeDetails : employees
         }
     })
+  
 
   }
    catch(err)
      {
+    //  logger.employeeLogger.log("error","Failed to  fetched all employee details")
         res.status(404).json({
            status:"fail",
            message:err.message
         })
+
+       
      }
+
 
 }
 
-exports.getEmployee = async (req,res)=>{
+exports.getEmployee = async (req,res,next)=>{
   try{
       const emp = await empModel.findById(req.params.id)
       // empModel.findOne({eid:req.params.eid})
+      //log(level,msg)
+      logger.log("info",`Successfully fetched  employee  details ${req.params.id}`)
       res.status(200).json({
         status:"Success",
         data:{
@@ -60,16 +71,13 @@ exports.getEmployee = async (req,res)=>{
     })
   }
   catch(err){
-    res.status(404).json({
-      status:"fail",
-      message:err.message,
-      details: "Please check employee id"
-   })
+    logger.log("error",`Failed to  fetched mployee  details ${req.params.id}`)
+     next(new ApiError(500,`${req.params.id} is not found`))
 
   }
 
 }
-exports.updateEmployee = async (req,res)=>{
+exports.updateEmployee = async (req,res,next)=>{
   try{
     //findByIdAndUpdate(filter,set or update , options)
     const emp =   await empModel.findByIdAndUpdate(req.params.id,req.body,{
@@ -89,11 +97,12 @@ exports.updateEmployee = async (req,res)=>{
     })
     }
     catch(err){
-      res.status(404).json({
-        status:"fail to update",
-        message:err.message,
-        details: "Please check employee id"
-     })
+    //   res.status(404).json({
+    //     status:"fail to update",
+    //     message:err.message,
+    //     details: "Please check employee id"
+    //  })
+    next(new ApiError(404,`${req.params.id} is not found. Failed to update`))
 
     }
 
@@ -130,4 +139,52 @@ exports.getAllEmployeeDetails= async(req,res)=>{
  return res.render("employees",{
     allemployeesDetails:allEmployees
   })
+}
+
+exports.addNewUser = async(req,res,next)=>{
+
+  try{
+    console.log(req.body)
+    const newEmployee =  await empModel.create({
+        eid:req.body.empid * 1,
+        fist_name:req.body.efn,
+        last_name:req.body.eln,
+        email:req.body.email
+    })
+    console.log(newEmployee)
+    if (newEmployee!=null){
+      return res.render("login")
+    }
+   
+  }
+  catch(err)
+    {
+      
+      next(new ApiError(404,`${err} is not found. Failed to update`))
+    }
+   
+}
+
+exports.showSignUp =async(req,res)=>{
+  
+  return res.render("singup")
+
+}
+exports.removeUser=async(req,res,next)=>{
+  console.log(req.query.eid)
+  try{
+   
+  const remove = await empModel.findByIdAndDelete(req.query.eid)
+  //const allEmployees = await empModel.find()
+  const allEmployees = await empModel.find()
+  return res.render("employees",{
+     allemployeesDetails:allEmployees
+   })
+  }
+  catch(err)
+    {
+      
+      next(new ApiError(404,`${err} is not found. Failed to delete`))
+    }
+
 }
